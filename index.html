@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skaner Zakupów</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .scan-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px;
+            display: block;
+            width: calc(100% - 40px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .scan-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .scan-button:active {
+            transform: translateY(0);
+        }
+
+        .pay-button {
+            background: #FF9800;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .pay-button:hover {
+            background: #FB8C00;
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        }
+
+        .pay-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        #scanner-container {
+            display: none;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        #reader {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .close-scanner {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .items-list {
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .item-name {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .item-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            margin-left: 15px;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: #ee5a6f;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        .total-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .total-label {
+            font-size: 16px;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .total-amount {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .payment-section {
+            background: rgba(255,255,255,0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .payment-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .payment-label {
+            font-size: 18px;
+        }
+
+        .payment-amount {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .payment-status {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .payment-status.success {
+            background: #4CAF50;
+        }
+
+        .payment-status.warning {
+            background: #ff9800;
+        }
+
+        .clear-all {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .clear-all:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .scanner-mode {
+            background: #e3f2fd;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #1976d2;
+            font-size: 14px;
+        }
+
+        .thank-you {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Skaner Zakupów</h1>
+            <p>Skanuj kody QR produktów</p>
+        </div>
+
+        <button class="scan-button" onclick="startScanner('product')">
+            📷 SKANUJ PRODUKTY
+        </button>
+
+        <button class="scan-button pay-button" id="payButton" onclick="startScanner('payment')" disabled>
+            💳 ZAPŁAĆ
+        </button>
+
+        <div id="scanner-container">
+            <div class="scanner-mode" id="scannerMode"></div>
+            <div id="reader"></div>
+            <button class="close-scanner" onclick="stopScanner()">Zamknij skaner</button>
+        </div>
+
+        <div class="items-list" id="items-list">
+            <div class="empty-state">
+                <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                </svg>
+                <p>Brak produktów</p>
+                <p style="font-size: 14px; margin-top: 5px;">Naciśnij "Skanuj produkty" aby rozpocząć</p>
+            </div>
+        </div>
+
+        <div class="total-container">
+            <div class="total-label">Suma zakupów:</div>
+            <div class="total-amount" id="total">0.00 zł</div>
+            
+            <div class="payment-section" id="paymentSection" style="display: none;">
+                <div class="payment-info">
+                    <span class="payment-label">Zapłacono:</span>
+                    <span class="payment-amount" id="paidAmount">0.00 zł</span>
+                </div>
+                <div class="payment-status" id="paymentStatus"></div>
+            </div>
+
+            <button class="clear-all" onclick="clearAll()">Wyczyść wszystko</button>
+        </div>
+    </div>
+
+    <script>
+        let items = [];
+        let paidAmount = 0;
+        let html5QrCode = null;
+        let scannerMode = 'product';
+
+        function startScanner(mode) {
+            scannerMode = mode;
+            document.getElementById('scanner-container').style.display = 'block';
+            
+            const modeText = mode === 'product' ? '📦 Skanowanie produktów' : '💵 Skanowanie płatności';
+            document.getElementById('scannerMode').textContent = modeText;
+            
+            html5QrCode = new Html5Qrcode("reader");
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                onScanSuccess,
+                onScanError
+            ).catch(err => {
+                alert("Nie udało się uruchomić kamery: " + err);
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('scanner-container').style.display = 'none';
+                }).catch(err => {
+                    console.error("Błąd przy zatrzymywaniu skanera:", err);
+                });
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            try {
+                const data = JSON.parse(decodedText);
+                
+                if (scannerMode === 'product') {
+                    if (data.nazwa && data.cena) {
+                        addItem(data.nazwa, parseFloat(data.cena));
+                        stopScanner();
+                    } else {
+                        alert("Nieprawidłowy format kodu QR produktu. Wymagane: nazwa i cena");
+                    }
+                } else if (scannerMode === 'payment') {
+                    if (data.money) {
+                        addPayment(parseFloat(data.money));
+                        stopScanner();
+                    } else {
+                        alert("Nieprawidłowy format kodu QR płatności. Wymagane: money");
+                    }
+                }
+            } catch (e) {
+                alert("Błąd odczytu kodu QR. Upewnij się, że kod zawiera odpowiedni format JSON");
+            }
+        }
+
+        function onScanError(errorMessage) {
+            // Ignorujemy błędy skanowania
+        }
+
+        function addItem(nazwa, cena) {
+            const item = {
+                id: Date.now(),
+                nazwa: nazwa,
+                cena: cena
+            };
+            
+            items.push(item);
+            renderItems();
+            updateTotal();
+            updatePayButton();
+        }
+
+        function addPayment(amount) {
+            paidAmount += amount;
+            document.getElementById('paidAmount').textContent = paidAmount.toFixed(2) + ' zł';
+            document.getElementById('paymentSection').style.display = 'block';
+            updatePaymentStatus();
+        }
+
+        function updatePaymentStatus() {
+            const total = items.reduce((sum, item) => sum + item.cena, 0);
+            const statusElement = document.getElementById('paymentStatus');
+            
+            if (paidAmount >= total && total > 0) {
+                const change = paidAmount - total;
+                if (change > 0) {
+                    statusElement.className = 'payment-status success';
+                    statusElement.innerHTML = `
+                        <div class="thank-you">✅ Dziękujemy za zakupy!</div>
+                        <div>Reszta: ${change.toFixed(2)} zł</div>
+                    `;
+                } else {
+                    statusElement.className = 'payment-status success';
+                    statusElement.innerHTML = `
+                        <div class="thank-you">✅ Dziękujemy za zakupy!</div>
+                    `;
+                }
+            } else if (paidAmount > 0) {
+                const missing = total - paidAmount;
+                statusElement.className = 'payment-status warning';
+                statusElement.innerHTML = `⚠️ Brakuje: ${missing.toFixed(2)} zł`;
+            } else {
+                statusElement.innerHTML = '';
+            }
+        }
+
+        function deleteItem(id) {
+            items = items.filter(item => item.id !== id);
+            renderItems();
+            updateTotal();
+            updatePayButton();
+            updatePaymentStatus();
+        }
+
+        function renderItems() {
+            const listContainer = document.getElementById('items-list');
+            
+            if (items.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                        </svg>
+                        <p>Brak produktów</p>
+                        <p style="font-size: 14px; margin-top: 5px;">Naciśnij "Skanuj produkty" aby rozpocząć</p>
+                    </div>
+                `;
+            } else {
+                listContainer.innerHTML = items.map(item => `
+                    <div class="item">
+                        <span class="item-name">${item.nazwa}</span>
+                        <span class="item-price">${item.cena.toFixed(2)} zł</span>
+                        <button class="delete-btn" onclick="deleteItem(${item.id})">✕</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateTotal() {
+            const total = items.reduce((sum, item) => sum + item.cena, 0);
+            document.getElementById('total').textContent = total.toFixed(2) + ' zł';
+        }
+
+        function updatePayButton() {
+            const payButton = document.getElementById('payButton');
+            payButton.disabled = items.length === 0;
+        }
+
+        function clearAll() {
+            if ((items.length > 0 || paidAmount > 0) && confirm('Czy na pewno chcesz wyczyścić wszystko?')) {
+                items = [];
+                paidAmount = 0;
+                renderItems();
+                updateTotal();
+                updatePayButton();
+                document.getElementById('paidAmount').textContent = '0.00 zł';
+                document.getElementById('paymentSection').style.display = 'none';
+            }
+        }
+
+        renderItems();
+        updateTotal();
+        updatePayButton();
+    </script>
+</body>
+</html>
