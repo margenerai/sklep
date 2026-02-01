@@ -114,7 +114,7 @@
 
         .table-header {
             display: grid;
-            grid-template-columns: 2fr 0.7fr 0.9fr 0.9fr 40px;
+            grid-template-columns: 2fr 0.7fr 0.9fr 0.9fr 35px;
             gap: 8px;
             padding: 10px 12px;
             background: #667eea;
@@ -127,7 +127,7 @@
 
         .item {
             display: grid;
-            grid-template-columns: 2fr 0.7fr 0.9fr 0.9fr 40px;
+            grid-template-columns: 2fr 0.7fr 0.9fr 0.9fr 35px;
             gap: 8px;
             align-items: center;
             padding: 12px;
@@ -179,12 +179,12 @@
             background: #ff4757;
             color: white;
             border: none;
-            padding: 6px;
-            border-radius: 5px;
+            padding: 4px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            width: 32px;
-            height: 32px;
+            font-size: 14px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -329,12 +329,12 @@
 
         <div class="total-container">
             <div class="total-label">Suma zakupów:</div>
-            <div class="total-amount" id="total">0</div>
+            <div class="total-amount" id="total">0 zł</div>
             
             <div class="payment-section" id="paymentSection" style="display: none;">
                 <div class="payment-info">
                     <span class="payment-label">Zapłacono:</span>
-                    <span class="payment-amount" id="paidAmount">0</span>
+                    <span class="payment-amount" id="paidAmount">0 zł</span>
                 </div>
                 <div class="payment-status" id="paymentStatus"></div>
             </div>
@@ -450,7 +450,7 @@
 
         function addPayment(amount) {
             paidAmount += amount;
-            document.getElementById('paidAmount').textContent = Math.round(paidAmount);
+            document.getElementById('paidAmount').textContent = Math.round(paidAmount) + ' zł';
             document.getElementById('paymentSection').style.display = 'block';
             updatePaymentStatus();
         }
@@ -465,7 +465,7 @@
                     statusElement.className = 'payment-status success';
                     statusElement.innerHTML = `
                         <div class="thank-you">✅ Dziękujemy za zakupy!</div>
-                        <div>Reszta: ${Math.round(change)}</div>
+                        <div>Reszta: ${Math.round(change)} zł</div>
                     `;
                 } else {
                     statusElement.className = 'payment-status success';
@@ -476,7 +476,7 @@
             } else if (paidAmount > 0) {
                 const missing = total - paidAmount;
                 statusElement.className = 'payment-status warning';
-                statusElement.innerHTML = `⚠️ Brakuje: ${Math.round(missing)}`;
+                statusElement.innerHTML = `⚠️ Brakuje: ${Math.round(missing)} zł`;
             } else {
                 statusElement.innerHTML = '';
             }
@@ -508,8 +508,8 @@
                     <div class="table-header">
                         <div>Produkt</div>
                         <div style="text-align: center;">Szt.</div>
-                        <div style="text-align: right;">Cena</div>
-                        <div style="text-align: right;">Suma</div>
+                        <div style="text-align: right;">Cena (zł)</div>
+                        <div style="text-align: right;">Suma (zł)</div>
                         <div></div>
                     </div>
                 `;
@@ -533,7 +533,7 @@
 
         function updateTotal() {
             const total = items.reduce((sum, item) => sum + (item.cena * item.quantity), 0);
-            document.getElementById('total').textContent = Math.round(total);
+            document.getElementById('total').textContent = Math.round(total) + ' zł';
         }
 
         function updatePayButton() {
@@ -548,7 +548,7 @@
                 renderItems();
                 updateTotal();
                 updatePayButton();
-                document.getElementById('paidAmount').textContent = '0';
+                document.getElementById('paidAmount').textContent = '0 zł';
                 document.getElementById('paymentSection').style.display = 'none';
             }
         }
