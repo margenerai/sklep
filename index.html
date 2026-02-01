@@ -114,24 +114,24 @@
 
         .table-header {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 50px;
-            gap: 10px;
-            padding: 12px 15px;
+            grid-template-columns: 2fr 0.7fr 0.9fr 0.9fr 40px;
+            gap: 8px;
+            padding: 10px 12px;
             background: #667eea;
             color: white;
             font-weight: bold;
             border-radius: 10px;
             margin-bottom: 10px;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .item {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 50px;
-            gap: 10px;
+            grid-template-columns: 2fr 0.7fr 0.9fr 0.9fr 40px;
+            gap: 8px;
             align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
             background: #f9f9f9;
             border-radius: 10px;
             border-left: 4px solid #667eea;
@@ -150,26 +150,27 @@
         }
 
         .item-name {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
+            word-break: break-word;
         }
 
         .item-quantity {
             text-align: center;
-            font-size: 16px;
-            font-weight: 500;
+            font-size: 14px;
+            font-weight: 600;
         }
 
         .item-price {
-            text-align: center;
-            font-size: 16px;
+            text-align: right;
+            font-size: 13px;
             font-weight: 500;
             color: #667eea;
         }
 
         .item-total {
-            text-align: center;
-            font-size: 18px;
+            text-align: right;
+            font-size: 14px;
             font-weight: bold;
             color: #667eea;
         }
@@ -178,15 +179,16 @@
             background: #ff4757;
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 6px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
-            width: 40px;
-            height: 40px;
+            font-size: 16px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .delete-btn:hover {
@@ -489,9 +491,9 @@
                 const headerHTML = `
                     <div class="table-header">
                         <div>Produkt</div>
-                        <div style="text-align: center;">Sztuki</div>
-                        <div style="text-align: center;">Cena</div>
-                        <div style="text-align: center;">Suma</div>
+                        <div style="text-align: center;">Szt.</div>
+                        <div style="text-align: right;">Cena</div>
+                        <div style="text-align: right;">Suma</div>
                         <div></div>
                     </div>
                 `;
