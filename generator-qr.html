@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Kodów QR - Sklep</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab:hover {
+            background: #e8e8e8;
+        }
+
+        .tab.active:hover {
+            background: white;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .generate-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            margin-top: 10px;
+        }
+
+        .generate-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .qr-result {
+            margin-top: 30px;
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .qr-result.show {
+            display: block;
+        }
+
+        #qrcode, #qrcode-money {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .download-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #1976D2;
+        }
+
+        .json-preview {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            word-wrap: break-word;
+        }
+
+        .quick-products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .quick-btn {
+            background: #E3F2FD;
+            color: #1976D2;
+            border: 2px solid #1976D2;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover {
+            background: #1976D2;
+            color: white;
+        }
+
+        .info-box {
+            background: #FFF9C4;
+            border-left: 4px solid #FBC02D;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .info-box strong {
+            color: #F57C00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔲 Generator Kodów QR</h1>
+            <p>Generuj kody dla skanera zakupów</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('product')">📦 Produkty</button>
+            <button class="tab" onclick="switchTab('money')">💵 Płatności</button>
+        </div>
+
+        <div class="content">
+            <!-- Tab: Produkty -->
+            <div id="product-tab" class="tab-content active">
+                <div class="info-box">
+                    <strong>💡 Jak to działa:</strong> Wpisz nazwę i cenę produktu, a kod QR zostanie automatycznie wygenerowany w formacie JSON.
+                </div>
+
+                <div class="form-group">
+                    <label for="productName">Nazwa produktu:</label>
+                    <input type="text" id="productName" placeholder="np. Mleko, Chleb, Parówki">
+                </div>
+
+                <div class="form-group">
+                    <label for="productPrice">Cena (zł):</label>
+                    <input type="number" id="productPrice" step="0.01" placeholder="np. 4.50">
+                </div>
+
+                <div class="json-preview" id="jsonPreview">
+                    {"nazwa":"","cena":0}
+                </div>
+
+                <button class="generate-btn" onclick="generateProductQR()">
+                    🔲 GENERUJ KOD QR
+                </button>
+
+                <div class="qr-result" id="qr-result-product">
+                    <h3>Twój kod QR:</h3>
+                    <div id="qrcode"></div>
+                    <button class="download-btn" onclick="downloadQR('qrcode')">📥 Pobierz kod</button>
+                    <button class="download-btn" onclick="printQR()">🖨️ Drukuj</button>
+                </div>
+
+                <h3 style="margin-top: 30px; color: #667eea;">⚡ Szybkie generowanie:</h3>
+                <div class="quick-products">
+                    <button class="quick-btn" onclick="quickProduct('Mleko', 4.50)">Mleko 4.50zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Chleb', 3.20)">Chleb 3.20zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Masło', 6.99)">Masło 6.99zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Parówki', 10.00)">Parówki 10.00zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Ser żółty', 12.50)">Ser 12.50zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Jogurt', 2.99)">Jogurt 2.99zł</button>
+                </div>
+            </div>
+
+            <!-- Tab: Płatności -->
+            <div id="money-tab" class="tab-content">
+                <div class="info-box">
+                    <strong>💡 Generuj kody dla banknotów:</strong> Wybierz wartość banknotu lub wpisz własną kwotę.
+                </div>
+
+                <div class="form-group">
+                    <label for="moneyAmount">Kwota (zł):</label>
+                    <input type="number" id="moneyAmount" step="1" placeholder="np. 50">
+                </div>
+
+                <div class="json-preview" id="jsonPreviewMoney">
+                    {"money":0}
+                </div>
+
+                <button class="generate-btn" onclick="generateMoneyQR()">
+                    🔲 GENERUJ KOD PŁATNOŚCI
+                </button>
+
+                <div class="qr-result" id="qr-result-money">
+                    <h3>Twój kod QR:</h3>
+                    <div id="qrcode-money"></div>
+                    <button class="download-btn" onclick="downloadQR('qrcode-money')">📥 Pobierz kod</button>
+                    <button class="download-btn" onclick="printQR()">🖨️ Drukuj</button>
+                </div>
+
+                <h3 style="margin-top: 30px; color: #667eea;">⚡ Popularne banknoty:</h3>
+                <div class="quick-products">
+                    <button class="quick-btn" onclick="quickMoney(10)">10 zł</button>
+                    <button class="quick-btn" onclick="quickMoney(20)">20 zł</button>
+                    <button class="quick-btn" onclick="quickMoney(50)">50 zł</button>
+                    <button class="quick-btn" onclick="quickMoney(100)">100 zł</button>
+                    <button class="quick-btn" onclick="quickMoney(200)">200 zł</button>
+                    <button class="quick-btn" onclick="quickMoney(500)">500 zł</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Zmiana zakładek
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'product') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('product-tab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('money-tab').classList.add('active');
+            }
+        }
+
+        // Aktualizacja podglądu JSON dla produktów
+        document.getElementById('productName').addEventListener('input', updateProductPreview);
+        document.getElementById('productPrice').addEventListener('input', updateProductPreview);
+
+        function updateProductPreview() {
+            const name = document.getElementById('productName').value || '';
+            const price = parseFloat(document.getElementById('productPrice').value) || 0;
+            const json = JSON.stringify({nazwa: name, cena: price});
+            document.getElementById('jsonPreview').textContent = json;
+        }
+
+        // Aktualizacja podglądu JSON dla płatności
+        document.getElementById('moneyAmount').addEventListener('input', updateMoneyPreview);
+
+        function updateMoneyPreview() {
+            const amount = parseFloat(document.getElementById('moneyAmount').value) || 0;
+            const json = JSON.stringify({money: amount});
+            document.getElementById('jsonPreviewMoney').textContent = json;
+        }
+
+        // Generowanie QR dla produktów
+        function generateProductQR() {
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+
+            if (!name || !price) {
+                alert('Wypełnij nazwę i cenę produktu!');
+                return;
+            }
+
+            const data = JSON.stringify({nazwa: name, cena: price});
+            
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById('qrcode'), {
+                text: data,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('qr-result-product').classList.add('show');
+        }
+
+        // Generowanie QR dla płatności
+        function generateMoneyQR() {
+            const amount = parseFloat(document.getElementById('moneyAmount').value);
+
+            if (!amount) {
+                alert('Wypełnij kwotę!');
+                return;
+            }
+
+            const data = JSON.stringify({money: amount});
+            
+            document.getElementById('qrcode-money').innerHTML = '';
+            new QRCode(document.getElementById('qrcode-money'), {
+                text: data,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('qr-result-money').classList.add('show');
+        }
+
+        // Szybkie generowanie produktu
+        function quickProduct(name, price) {
+            document.getElementById('productName').value = name;
+            document.getElementById('productPrice').value = price;
+            updateProductPreview();
+            generateProductQR();
+        }
+
+        // Szybkie generowanie płatności
+        function quickMoney(amount) {
+            document.getElementById('moneyAmount').value = amount;
+            updateMoneyPreview();
+            generateMoneyQR();
+        }
+
+        // Pobieranie QR
+        function downloadQR(elementId) {
+            const canvas = document.querySelector(`#${elementId} canvas`);
+            if (!canvas) {
+                alert('Najpierw wygeneruj kod QR!');
+                return;
+            }
+
+            const url = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `qr-code-${Date.now()}.png`;
+            link.href = url;
+            link.click();
+        }
+
+        // Drukowanie
+        function printQR() {
+            // Znajdź aktywną zakładkę i odpowiedni kod QR
+            const productTab = document.getElementById('product-tab');
+            const isProductActive = productTab.classList.contains('active');
+            
+            const qrElement = isProductActive 
+                ? document.getElementById('qrcode')
+                : document.getElementById('qrcode-money');
+            
+            const canvas = qrElement.querySelector('canvas');
+            
+            if (!canvas) {
+                alert('Najpierw wygeneruj kod QR!');
+                return;
+            }
+
+            // Utwórz nowe okno do drukowania
+            const printWindow = window.open('', '', 'width=600,height=600');
+            const imgData = canvas.toDataURL('image/png');
+            
+            // Pobierz nazwę produktu lub kwotę dla tytułu
+            let title = 'Kod QR';
+            let htmlContent = '';
+            
+            if (isProductActive) {
+                const productName = document.getElementById('productName').value;
+                const productPrice = document.getElementById('productPrice').value;
+                if (productName && productPrice) {
+                    title = `${productName} - ${productPrice} zł`;
+                }
+                
+                // Dla produktów - prosty wydruk
+                htmlContent = `
+                    <html>
+                    <head>
+                        <title>Drukuj kod QR</title>
+                        <style>
+                            body {
+                                margin: 0;
+                                padding: 20px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                font-family: Arial, sans-serif;
+                            }
+                            h2 {
+                                margin-bottom: 20px;
+                                text-align: center;
+                                font-size: 18px;
+                            }
+                            img {
+                                width: 128px;
+                                height: 128px;
+                            }
+                            @media print {
+                                body {
+                                    padding: 0;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>${title}</h2>
+                        <img src="${imgData}" />
+                    </body>
+                    </html>
+                `;
+            } else {
+                // Dla płatności - wizualizacja banknotu
+                const amount = document.getElementById('moneyAmount').value;
+                title = `Banknot ${amount} zł`;
+                
+                htmlContent = `
+                    <html>
+                    <head>
+                        <title>Drukuj banknot</title>
+                        <style>
+                            * {
+                                margin: 0;
+                                padding: 0;
+                                box-sizing: border-box;
+                            }
+                            body {
+                                margin: 0;
+                                padding: 20px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-family: 'Arial', sans-serif;
+                                min-height: 100vh;
+                            }
+                            .banknote {
+                                width: 400px;
+                                height: 200px;
+                                border: 3px solid #333;
+                                border-radius: 10px;
+                                background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+                                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                                display: flex;
+                                align-items: center;
+                                padding: 20px;
+                                position: relative;
+                                overflow: hidden;
+                            }
+                            .banknote::before {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                bottom: 0;
+                                background: repeating-linear-gradient(
+                                    45deg,
+                                    transparent,
+                                    transparent 10px,
+                                    rgba(255,255,255,0.1) 10px,
+                                    rgba(255,255,255,0.1) 20px
+                                );
+                                pointer-events: none;
+                            }
+                            .qr-section {
+                                flex-shrink: 0;
+                                background: white;
+                                padding: 10px;
+                                border-radius: 8px;
+                                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                            }
+                            .qr-section img {
+                                display: block;
+                                width: 120px;
+                                height: 120px;
+                            }
+                            .value-section {
+                                flex: 1;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                padding-left: 30px;
+                                position: relative;
+                                z-index: 1;
+                            }
+                            .banknote-label {
+                                font-size: 24px;
+                                font-weight: bold;
+                                color: #333;
+                                margin-bottom: 10px;
+                                text-transform: uppercase;
+                                letter-spacing: 2px;
+                            }
+                            .banknote-amount {
+                                font-size: 72px;
+                                font-weight: bold;
+                                color: #1a1a1a;
+                                line-height: 1;
+                                text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+                            }
+                            .banknote-currency {
+                                font-size: 28px;
+                                font-weight: bold;
+                                color: #555;
+                                margin-top: 5px;
+                            }
+                            @media print {
+                                body {
+                                    padding: 0;
+                                }
+                                .banknote {
+                                    box-shadow: none;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="banknote">
+                            <div class="qr-section">
+                                <img src="${imgData}" alt="QR Code" />
+                            </div>
+                            <div class="value-section">
+                                <div class="banknote-label">Banknot</div>
+                                <div class="banknote-amount">${amount}</div>
+                                <div class="banknote-currency">zł</div>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `;
+            }
+            
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            // Opóźnienie, aby obraz się załadował przed drukowaniem
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
+    </script>
+</body>
+</html>
