@@ -329,12 +329,12 @@
 
         <div class="total-container">
             <div class="total-label">Suma zakupów:</div>
-            <div class="total-amount" id="total">0.00 zł</div>
+            <div class="total-amount" id="total">0</div>
             
             <div class="payment-section" id="paymentSection" style="display: none;">
                 <div class="payment-info">
                     <span class="payment-label">Zapłacono:</span>
-                    <span class="payment-amount" id="paidAmount">0.00 zł</span>
+                    <span class="payment-amount" id="paidAmount">0</span>
                 </div>
                 <div class="payment-status" id="paymentStatus"></div>
             </div>
@@ -387,14 +387,30 @@
                 
                 if (scannerMode === 'product') {
                     if (data.nazwa && data.cena) {
-                        addItem(data.nazwa, parseFloat(data.cena));
+                        const cena = parseFloat(data.cena);
+                        
+                        // Sprawdź czy cena to pełna liczba
+                        if (!Number.isInteger(cena)) {
+                            alert("Cena musi być pełną liczbą (bez groszy). Przykład: 10, nie 10.50");
+                            return;
+                        }
+                        
+                        addItem(data.nazwa, cena);
                         stopScanner();
                     } else {
                         alert("Nieprawidłowy format kodu QR produktu. Wymagane: nazwa i cena");
                     }
                 } else if (scannerMode === 'payment') {
                     if (data.money) {
-                        addPayment(parseFloat(data.money));
+                        const amount = parseFloat(data.money);
+                        
+                        // Sprawdź czy kwota to pełna liczba
+                        if (!Number.isInteger(amount)) {
+                            alert("Kwota musi być pełną liczbą (bez groszy). Przykład: 50, nie 50.50");
+                            return;
+                        }
+                        
+                        addPayment(amount);
                         stopScanner();
                     } else {
                         alert("Nieprawidłowy format kodu QR płatności. Wymagane: money");
@@ -434,7 +450,7 @@
 
         function addPayment(amount) {
             paidAmount += amount;
-            document.getElementById('paidAmount').textContent = paidAmount.toFixed(2) + ' zł';
+            document.getElementById('paidAmount').textContent = Math.round(paidAmount);
             document.getElementById('paymentSection').style.display = 'block';
             updatePaymentStatus();
         }
@@ -449,7 +465,7 @@
                     statusElement.className = 'payment-status success';
                     statusElement.innerHTML = `
                         <div class="thank-you">✅ Dziękujemy za zakupy!</div>
-                        <div>Reszta: ${change.toFixed(2)} zł</div>
+                        <div>Reszta: ${Math.round(change)}</div>
                     `;
                 } else {
                     statusElement.className = 'payment-status success';
@@ -460,7 +476,7 @@
             } else if (paidAmount > 0) {
                 const missing = total - paidAmount;
                 statusElement.className = 'payment-status warning';
-                statusElement.innerHTML = `⚠️ Brakuje: ${missing.toFixed(2)} zł`;
+                statusElement.innerHTML = `⚠️ Brakuje: ${Math.round(missing)}`;
             } else {
                 statusElement.innerHTML = '';
             }
@@ -504,8 +520,8 @@
                         <div class="item">
                             <span class="item-name">${item.nazwa}</span>
                             <span class="item-quantity">${item.quantity}</span>
-                            <span class="item-price">${item.cena.toFixed(2)} zł</span>
-                            <span class="item-total">${totalPrice.toFixed(2)} zł</span>
+                            <span class="item-price">${Math.round(item.cena)}</span>
+                            <span class="item-total">${Math.round(totalPrice)}</span>
                             <button class="delete-btn" onclick="deleteItem(${item.id})">✕</button>
                         </div>
                     `;
@@ -517,7 +533,7 @@
 
         function updateTotal() {
             const total = items.reduce((sum, item) => sum + (item.cena * item.quantity), 0);
-            document.getElementById('total').textContent = total.toFixed(2) + ' zł';
+            document.getElementById('total').textContent = Math.round(total);
         }
 
         function updatePayButton() {
@@ -532,7 +548,7 @@
                 renderItems();
                 updateTotal();
                 updatePayButton();
-                document.getElementById('paidAmount').textContent = '0.00 zł';
+                document.getElementById('paidAmount').textContent = '0';
                 document.getElementById('paymentSection').style.display = 'none';
             }
         }
