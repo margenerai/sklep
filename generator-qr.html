@@ -438,8 +438,7 @@
                 return;
             }
 
-            // Utwórz nowe okno do drukowania
-            const printWindow = window.open('', '', 'width=600,height=600');
+            // Konwertuj canvas na base64
             const imgData = canvas.toDataURL('image/png');
             
             // Pobierz nazwę produktu lub kwotę dla tytułu
@@ -454,9 +453,11 @@
                 }
                 
                 // Dla produktów - prosty wydruk
-                htmlContent = `
+                htmlContent = `<!DOCTYPE html>
                     <html>
                     <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
                         <title>Drukuj kod QR</title>
                         <style>
                             body {
@@ -486,7 +487,7 @@
                     </head>
                     <body>
                         <h2>${title}</h2>
-                        <img src="${imgData}" />
+                        <img src="${imgData}" alt="QR Code" />
                     </body>
                     </html>
                 `;
@@ -495,9 +496,11 @@
                 const amount = document.getElementById('moneyAmount').value;
                 title = `Banknot ${amount} zł`;
                 
-                htmlContent = `
+                htmlContent = `<!DOCTYPE html>
                     <html>
                     <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
                         <title>Drukuj banknot</title>
                         <style>
                             * {
@@ -612,15 +615,39 @@
                 `;
             }
             
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
-            printWindow.focus();
+            // Wykryj urządzenie mobilne
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
-            // Opóźnienie, aby obraz się załadował przed drukowaniem
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 250);
+            if (isMobile) {
+                // Na mobilnych - otwórz w nowej karcie zamiast window.open dla lepszej kompatybilności
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const newWindow = window.open(url, '_blank');
+                
+                if (!newWindow) {
+                    alert('Zablokowano wyskakujące okno. Zezwól na wyskakujące okna i spróbuj ponownie.');
+                }
+            } else {
+                // Na desktopie - standardowe drukowanie
+                const printWindow = window.open('', '', 'width=800,height=600');
+                
+                if (!printWindow) {
+                    alert('Zablokowano wyskakujące okno. Zezwól na wyskakujące okna i spróbuj ponownie.');
+                    return;
+                }
+                
+                printWindow.document.open();
+                printWindow.document.write(htmlContent);
+                printWindow.document.close();
+                
+                // Poczekaj na załadowanie obrazu przed drukowaniem
+                printWindow.onload = function() {
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                    }, 500);
+                };
+            }
         }
     </script>
 </body>
