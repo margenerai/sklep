@@ -229,7 +229,7 @@
             <!-- Tab: Produkty -->
             <div id="product-tab" class="tab-content active">
                 <div class="info-box">
-                    <strong>💡 Jak to działa:</strong> Wpisz nazwę i cenę produktu, a kod QR zostanie automatycznie wygenerowany w formacie JSON.
+                    <strong>💡 Jak to działa:</strong> Wpisz nazwę i cenę produktu, a kod QR zostanie automatycznie wygenerowany w formacie JSON. Możesz używać tylko liczb całkowitych.
                 </div>
 
                 <div class="form-group">
@@ -239,11 +239,7 @@
 
                 <div class="form-group">
                     <label for="productPrice">Cena (zł):</label>
-                    <input type="number" id="productPrice" step="0.01" placeholder="np. 4.50">
-                </div>
-
-                <div class="json-preview" id="jsonPreview">
-                    {"nazwa":"","cena":0}
+                    <input type="number" id="productPrice" step="1" placeholder="np. 10">
                 </div>
 
                 <button class="generate-btn" onclick="generateProductQR()">
@@ -259,28 +255,24 @@
 
                 <h3 style="margin-top: 30px; color: #667eea;">⚡ Szybkie generowanie:</h3>
                 <div class="quick-products">
-                    <button class="quick-btn" onclick="quickProduct('Mleko', 4.50)">Mleko 4.50zł</button>
-                    <button class="quick-btn" onclick="quickProduct('Chleb', 3.20)">Chleb 3.20zł</button>
-                    <button class="quick-btn" onclick="quickProduct('Masło', 6.99)">Masło 6.99zł</button>
-                    <button class="quick-btn" onclick="quickProduct('Parówki', 10.00)">Parówki 10.00zł</button>
-                    <button class="quick-btn" onclick="quickProduct('Ser żółty', 12.50)">Ser 12.50zł</button>
-                    <button class="quick-btn" onclick="quickProduct('Jogurt', 2.99)">Jogurt 2.99zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Mleko', 5)">Mleko 5zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Chleb', 3)">Chleb 3zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Masło', 7)">Masło 7zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Parówki', 10)">Parówki 10zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Ser żółty', 13)">Ser 13zł</button>
+                    <button class="quick-btn" onclick="quickProduct('Jogurt', 3)">Jogurt 3zł</button>
                 </div>
             </div>
 
             <!-- Tab: Płatności -->
             <div id="money-tab" class="tab-content">
                 <div class="info-box">
-                    <strong>💡 Generuj kody dla banknotów:</strong> Wybierz wartość banknotu lub wpisz własną kwotę.
+                    <strong>💡 Generuj kody dla banknotów:</strong> Wybierz wartość banknotu lub wpisz własną kwotę. Możesz używać tylko liczb całkowitych.
                 </div>
 
                 <div class="form-group">
                     <label for="moneyAmount">Kwota (zł):</label>
                     <input type="number" id="moneyAmount" step="1" placeholder="np. 50">
-                </div>
-
-                <div class="json-preview" id="jsonPreviewMoney">
-                    {"money":0}
                 </div>
 
                 <button class="generate-btn" onclick="generateMoneyQR()">
@@ -322,26 +314,6 @@
             }
         }
 
-        // Aktualizacja podglądu JSON dla produktów
-        document.getElementById('productName').addEventListener('input', updateProductPreview);
-        document.getElementById('productPrice').addEventListener('input', updateProductPreview);
-
-        function updateProductPreview() {
-            const name = document.getElementById('productName').value || '';
-            const price = parseFloat(document.getElementById('productPrice').value) || 0;
-            const json = JSON.stringify({nazwa: name, cena: price});
-            document.getElementById('jsonPreview').textContent = json;
-        }
-
-        // Aktualizacja podglądu JSON dla płatności
-        document.getElementById('moneyAmount').addEventListener('input', updateMoneyPreview);
-
-        function updateMoneyPreview() {
-            const amount = parseFloat(document.getElementById('moneyAmount').value) || 0;
-            const json = JSON.stringify({money: amount});
-            document.getElementById('jsonPreviewMoney').textContent = json;
-        }
-
         // Generowanie QR dla produktów
         function generateProductQR() {
             const name = document.getElementById('productName').value;
@@ -349,6 +321,12 @@
 
             if (!name || !price) {
                 alert('Wypełnij nazwę i cenę produktu!');
+                return;
+            }
+            
+            // Sprawdź czy cena to pełna liczba
+            if (!Number.isInteger(price)) {
+                alert("Cena musi być pełną liczbą (bez groszy). Przykład: 10, nie 10.50");
                 return;
             }
 
@@ -375,6 +353,12 @@
                 alert('Wypełnij kwotę!');
                 return;
             }
+            
+            // Sprawdź czy kwota to pełna liczba
+            if (!Number.isInteger(amount)) {
+                alert("Kwota musi być pełną liczbą (bez groszy). Przykład: 50, nie 50.50");
+                return;
+            }
 
             const data = JSON.stringify({money: amount});
             
@@ -394,15 +378,13 @@
         // Szybkie generowanie produktu
         function quickProduct(name, price) {
             document.getElementById('productName').value = name;
-            document.getElementById('productPrice').value = price;
-            updateProductPreview();
+            document.getElementById('productPrice').value = Math.round(price);
             generateProductQR();
         }
 
         // Szybkie generowanie płatności
         function quickMoney(amount) {
             document.getElementById('moneyAmount').value = amount;
-            updateMoneyPreview();
             generateMoneyQR();
         }
 
@@ -421,9 +403,28 @@
             link.click();
         }
 
+        // Pobieranie banknotu (pełny obraz z QR + grafiką)
+        function downloadBanknote() {
+            const canvas = document.querySelector('#qrcode-money canvas');
+            if (!canvas) {
+                alert('Najpierw wygeneruj kod płatności!');
+                return;
+            }
+
+            const amount = document.getElementById('moneyAmount').value;
+            const banknoteCanvas = createBanknoteCanvas(canvas, amount);
+            
+            const url = banknoteCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `banknot-${amount}zl.png`;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         // Drukowanie
         function printQR() {
-            // Znajdź aktywną zakładkę i odpowiedni kod QR
             const productTab = document.getElementById('product-tab');
             const isProductActive = productTab.classList.contains('active');
             
@@ -438,21 +439,366 @@
                 return;
             }
 
-            // Konwertuj canvas na base64 - używamy wysokiej jakości
-            const imgData = canvas.toDataURL('image/png', 1.0);
-            
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            let finalCanvas;
             if (isProductActive) {
-                // Dla produktów - prosty wydruk
-                const productName = document.getElementById('productName').value;
-                const productPrice = document.getElementById('productPrice').value;
-                const title = productName && productPrice ? `${productName} - ${productPrice} zł` : 'Kod QR';
-                
-                printSimpleQR(imgData, title);
+                const productName = document.getElementById('productName').value || 'Produkt';
+                const productPrice = document.getElementById('productPrice').value || '0';
+                finalCanvas = createProductCanvas(canvas, productName, productPrice);
             } else {
-                // Dla płatności - wizualizacja banknotu
-                const amount = document.getElementById('moneyAmount').value;
-                printBanknote(imgData, amount);
+                // Dla płatności też używamy prostego układu (QR + podpis)
+                const amount = document.getElementById('moneyAmount').value || '0';
+                finalCanvas = createProductCanvas(canvas, 'Płatność', amount);
             }
+            
+            if (isMobile) {
+                // Na mobile - pobierz obraz
+                downloadCanvasImage(finalCanvas, isProductActive);
+            } else {
+                // Na desktop - drukuj
+                printCanvasImage(finalCanvas);
+            }
+        }
+
+        function downloadCanvasImage(canvas, isProduct) {
+            const url = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            
+            if (isProduct) {
+                const name = document.getElementById('productName').value || 'produkt';
+                link.download = `${name}.png`;
+            } else {
+                const amount = document.getElementById('moneyAmount').value;
+                link.download = `platnosc-${amount}zl.png`;
+            }
+            
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('Obraz został pobrany!\n\nOtwórz galerię i wydrukuj z opcji udostępniania.');
+        }
+
+        function printCanvasImage(canvas) {
+            const imgData = canvas.toDataURL('image/png');
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert('Zablokowano okno. Zezwól na wyskakujące okna.');
+                return;
+            }
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Drukuj</title>
+                    <style>
+                        body { 
+                            margin: 0; 
+                            padding: 0; 
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            min-height: 100vh;
+                        }
+                        img { 
+                            max-width: 100%; 
+                            height: auto; 
+                        }
+                    </style>
+                </head>
+                <body>
+                    <img src="${imgData}" onload="window.print();" />
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // Generuje canvas z produktem (QR + tytuł)
+        function createProductCanvas(qrCanvas, name, price) {
+            const c = document.createElement('canvas');
+            c.width = 300;
+            c.height = 360;
+            const ctx = c.getContext('2d');
+
+            // białe tło
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, 300, 360);
+
+            // tytuł
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 22px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${name} - ${price} zł`, 150, 40);
+
+            // QR (zmniejszony o 40%: 200 * 0.6 = 120)
+            ctx.drawImage(qrCanvas, 90, 70, 120, 120);
+
+            return c;
+        }
+
+        // Generuje canvas z banknotem (ramka + QR + kwota)
+        function createBanknoteCanvas(qrCanvas, amount) {
+            const c = document.createElement('canvas');
+            c.width = 800;
+            c.height = 400;
+            const ctx = c.getContext('2d');
+
+            // białe tło
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, 800, 400);
+
+            // gradient
+            const gradient = ctx.createLinearGradient(0, 0, 800, 400);
+            gradient.addColorStop(0, '#f5f5f5');
+            gradient.addColorStop(1, '#e0e0e0');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 800, 400);
+
+            // linie ukośne
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 60; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * 30 - 400, 0);
+                ctx.lineTo(i * 30, 400);
+                ctx.stroke();
+            }
+
+            // ramka główna
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(10, 10, 780, 380);
+
+            // białe tło dla QR
+            ctx.fillStyle = 'white';
+            ctx.fillRect(50, 100, 240, 240);
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(50, 100, 240, 240);
+
+            // QR
+            ctx.drawImage(qrCanvas, 60, 110, 220, 220);
+
+            // BANKNOT
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('BANKNOT', 550, 150);
+
+            // kwota
+            ctx.font = 'bold 144px Arial';
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillText(amount, 550, 280);
+
+            // zł
+            ctx.font = 'bold 56px Arial';
+            ctx.fillStyle = '#555';
+            ctx.fillText('zł', 550, 350);
+
+            return c;
+        }
+        function getSimpleQRHTML(imgData, title) {
+            return `<!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${title}</title>
+                    <style>
+                        body {
+                            margin: 0;
+                            padding: 20px;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            font-family: Arial, sans-serif;
+                            min-height: 100vh;
+                        }
+                        h2 {
+                            margin-bottom: 20px;
+                            text-align: center;
+                            font-size: 18px;
+                        }
+                        img {
+                            width: 128px;
+                            height: 128px;
+                        }
+                        .print-info {
+                            margin-top: 30px;
+                            padding: 15px;
+                            background: #e3f2fd;
+                            border-radius: 8px;
+                            text-align: center;
+                        }
+                        @media print {
+                            body {
+                                padding: 0;
+                            }
+                            .print-info {
+                                display: none;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>${title}</h2>
+                    <img src="${imgData}" alt="QR Code" />
+                    <div class="print-info">
+                        📱 ANDROID: Pobierz obraz długim kliknięciem na obrazku, potem wydrukuj z galerii
+                    </div>
+                </body>
+                </html>`;
+        }
+
+        function getBanknoteHTML(imgData, amount) {
+            return `<!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Banknot ${amount} zł</title>
+                    <style>
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 20px;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            font-family: Arial, sans-serif;
+                            min-height: 100vh;
+                        }
+                        .banknote {
+                            width: 400px;
+                            max-width: 100%;
+                            height: 200px;
+                            border: 3px solid #333;
+                            border-radius: 10px;
+                            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+                            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                            display: flex;
+                            align-items: center;
+                            padding: 20px;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        .banknote::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: repeating-linear-gradient(
+                                45deg,
+                                transparent,
+                                transparent 10px,
+                                rgba(255,255,255,0.1) 10px,
+                                rgba(255,255,255,0.1) 20px
+                            );
+                            pointer-events: none;
+                        }
+                        .qr-section {
+                            flex-shrink: 0;
+                            background: white;
+                            padding: 10px;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                            z-index: 1;
+                        }
+                        .qr-section img {
+                            display: block;
+                            width: 120px;
+                            height: 120px;
+                        }
+                        .value-section {
+                            flex: 1;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            padding-left: 30px;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .banknote-label {
+                            font-size: 24px;
+                            font-weight: bold;
+                            color: #333;
+                            margin-bottom: 10px;
+                            text-transform: uppercase;
+                            letter-spacing: 2px;
+                        }
+                        .banknote-amount {
+                            font-size: 72px;
+                            font-weight: bold;
+                            color: #1a1a1a;
+                            line-height: 1;
+                            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+                        }
+                        .banknote-currency {
+                            font-size: 28px;
+                            font-weight: bold;
+                            color: #555;
+                            margin-top: 5px;
+                        }
+                        .print-info {
+                            margin-top: 30px;
+                            padding: 15px;
+                            background: #e3f2fd;
+                            border-radius: 8px;
+                            text-align: center;
+                            max-width: 400px;
+                        }
+                        @media print {
+                            body {
+                                padding: 0;
+                            }
+                            .banknote {
+                                box-shadow: none;
+                            }
+                            .print-info {
+                                display: none;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="banknote">
+                        <div class="qr-section">
+                            <img src="${imgData}" alt="QR Code" />
+                        </div>
+                        <div class="value-section">
+                            <div class="banknote-label">BANKNOT</div>
+                            <div class="banknote-amount">${amount}</div>
+                            <div class="banknote-currency">zł</div>
+                        </div>
+                    </div>
+                    <div class="print-info">
+                        📱 ANDROID: Pobierz obraz długim kliknięciem, potem wydrukuj z galerii
+                    </div>
+                </body>
+                </html>`;
+        }
+
+        function openInNewTabMobile(htmlContent) {
+            // Dla urządzeń mobilnych - otwórz w nowej karcie
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
         }
 
         function printSimpleQR(imgData, title) {
