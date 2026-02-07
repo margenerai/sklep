@@ -330,6 +330,7 @@
             }
         }
 
+        
         // Generowanie QR dla produktów
         function generateProductQR() {
             const name = document.getElementById('productName').value;
@@ -349,35 +350,30 @@
             const data = JSON.stringify({nazwa: name, cena: price});
             
             try {
+                // Czyścimy stary kod
                 document.getElementById('qrcode').innerHTML = '';
                 
+                // Generujemy nowy kod z obsługą polskich znaków i długich nazw
                 new QRCode(document.getElementById('qrcode'), {
-                    text: unescape(encodeURIComponent(data)), // Fix na polskie znaki
+                    // To naprawia polskie znaki:
+                    text: unescape(encodeURIComponent(data)), 
                     width: 256,
                     height: 256,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.L, // L = mieści najwięcej tekstu
-                    typeNumber: 0 // 0 = Automat (pozwala kodowi urosnąć tak bardzo jak trzeba)
+                    // Poziom L (Low) pozwala zmieścić najwięcej znaków
+                    correctLevel: QRCode.CorrectLevel.L
                 });
                 
+                // Pokazujemy wynik
                 document.getElementById('qr-result-product').classList.add('show');
+
             } catch (error) {
                 console.error('Błąd generowania QR:', error);
-                alert('Nie można wygenerować kodu QR. Nawet przy automatycznym rozmiarze nazwa jest zbyt długa.');
-            }
-                
-                if (!success) {
-                    throw new Error('Nie można wygenerować kodu QR - dane są zbyt długie');
-                }
-                
-                document.getElementById('qr-result-product').classList.add('show');
-            } catch (error) {
-                console.error('Błąd generowania QR:', error);
-                alert('Nie można wygenerować kodu QR. Nazwa produktu jest zbyt długa.\n\nSpróbuj skrócić nazwę.');
+                alert('Wystąpił błąd. Jeśli nazwa jest bardzo długa, spróbuj ją skrócić.');
             }
         }
-
+        
         // Generowanie QR dla płatności
         function generateMoneyQR() {
             const amount = parseFloat(document.getElementById('moneyAmount').value);
