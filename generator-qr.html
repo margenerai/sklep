@@ -362,7 +362,7 @@
                 for (let config of sizes) {
                     try {
                         new QRCode(document.getElementById('qrcode'), {
-                            text: data,
+                            text: unescape(encodeURIComponent(data)),
                             width: 256,
                             height: 256,
                             colorDark: "#000000",
