@@ -346,24 +346,45 @@
                 return;
             }
 
-            // Użyj Base64 dla polskich znaków
             const data = JSON.stringify({nazwa: name, cena: price});
             
             try {
                 document.getElementById('qrcode').innerHTML = '';
-                new QRCode(document.getElementById('qrcode'), {
-                    text: data,
-                    width: 256,
-                    height: 256,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-
+                
+                // Próbuj różne rozmiary aż się uda
+                let success = false;
+                const sizes = [
+                    { typeNumber: 0, errorCorrectionLevel: 'L' },  // Auto-detect z najniższą korektą
+                    { typeNumber: 0, errorCorrectionLevel: 'M' },  // Auto-detect ze średnią korektą
+                    { typeNumber: 10, errorCorrectionLevel: 'L' }, // Duży rozmiar z niską korektą
+                ];
+                
+                for (let config of sizes) {
+                    try {
+                        new QRCode(document.getElementById('qrcode'), {
+                            text: data,
+                            width: 256,
+                            height: 256,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel[config.errorCorrectionLevel]
+                        });
+                        success = true;
+                        break;
+                    } catch (e) {
+                        document.getElementById('qrcode').innerHTML = '';
+                        continue;
+                    }
+                }
+                
+                if (!success) {
+                    throw new Error('Nie można wygenerować kodu QR - dane są zbyt długie');
+                }
+                
                 document.getElementById('qr-result-product').classList.add('show');
             } catch (error) {
                 console.error('Błąd generowania QR:', error);
-                alert('Wystąpił błąd podczas generowania kodu QR. Spróbuj użyć innych znaków.');
+                alert('Nie można wygenerować kodu QR. Nazwa produktu jest zbyt długa.\n\nSpróbuj skrócić nazwę.');
             }
         }
 
@@ -392,9 +413,8 @@
                     height: 256,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
+                    correctLevel: QRCode.CorrectLevel.L
                 });
-
                 document.getElementById('qr-result-money').classList.add('show');
             } catch (error) {
                 console.error('Błąd generowania QR:', error);
@@ -417,9 +437,15 @@
 
         // Pobieranie szablonów PDF
         function downloadTemplate(type) {
-            alert(`Funkcja pobierania szablonów ${type} będzie dostępna wkrótce!\n\nSzablony PDF z przykładowymi kodami QR będą do pobrania w następnej wersji.`);
-            // TODO: Implementacja generowania PDF z szablonem
-            // const filename = type === 'produkty' ? 'szablon_produkty.pdf' : 'szablon_banknoty.pdf';
+            const filename = type === 'produkty' ? 'szablon_produkty.pdf' : 'szablon_banknoty.pdf';
+            
+            // Utwórz link do pobrania
+            const link = document.createElement('a');
+            link.href = filename;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // Pobieranie QR
