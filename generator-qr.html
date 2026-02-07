@@ -351,31 +351,21 @@
             try {
                 document.getElementById('qrcode').innerHTML = '';
                 
-                // Próbuj różne rozmiary aż się uda
-                let success = false;
-                const sizes = [
-                    { typeNumber: 0, errorCorrectionLevel: 'L' },  // Auto-detect z najniższą korektą
-                    { typeNumber: 0, errorCorrectionLevel: 'M' },  // Auto-detect ze średnią korektą
-                    { typeNumber: 10, errorCorrectionLevel: 'L' }, // Duży rozmiar z niską korektą
-                ];
+                new QRCode(document.getElementById('qrcode'), {
+                    text: unescape(encodeURIComponent(data)), // Fix na polskie znaki
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.L, // L = mieści najwięcej tekstu
+                    typeNumber: 0 // 0 = Automat (pozwala kodowi urosnąć tak bardzo jak trzeba)
+                });
                 
-                for (let config of sizes) {
-                    try {
-                        new QRCode(document.getElementById('qrcode'), {
-                            text: unescape(encodeURIComponent(data)),
-                            width: 256,
-                            height: 256,
-                            colorDark: "#000000",
-                            colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel[config.errorCorrectionLevel]
-                        });
-                        success = true;
-                        break;
-                    } catch (e) {
-                        document.getElementById('qrcode').innerHTML = '';
-                        continue;
-                    }
-                }
+                document.getElementById('qr-result-product').classList.add('show');
+            } catch (error) {
+                console.error('Błąd generowania QR:', error);
+                alert('Nie można wygenerować kodu QR. Nawet przy automatycznym rozmiarze nazwa jest zbyt długa.');
+            }
                 
                 if (!success) {
                     throw new Error('Nie można wygenerować kodu QR - dane są zbyt długie');
