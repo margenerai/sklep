@@ -228,10 +228,6 @@
         <div class="content">
             <!-- Tab: Produkty -->
             <div id="product-tab" class="tab-content active">
-                <div class="info-box">
-                    <strong>💡 Jak to działa:</strong> Wpisz nazwę i cenę produktu, a kod QR zostanie automatycznie wygenerowany w formacie JSON. Możesz używać tylko liczb całkowitych.
-                </div>
-
                 <div class="form-group">
                     <label for="productName">Nazwa produktu:</label>
                     <input type="text" id="productName" placeholder="np. Mleko, Chleb, Parówki">
@@ -239,7 +235,7 @@
 
                 <div class="form-group">
                     <label for="productPrice">Cena (zł):</label>
-                    <input type="number" id="productPrice" step="1" placeholder="np. 10">
+                    <input type="number" id="productPrice" step="1" placeholder="np. 10 - tylko pełne liczby (bez groszy)">
                 </div>
 
                 <button class="generate-btn" onclick="generateProductQR()">
@@ -278,13 +274,9 @@
 
             <!-- Tab: Płatności -->
             <div id="money-tab" class="tab-content">
-                <div class="info-box">
-                    <strong>💡 Generuj kody dla banknotów:</strong> Wybierz wartość banknotu lub wpisz własną kwotę. Możesz używać tylko liczb całkowitych.
-                </div>
-
                 <div class="form-group">
                     <label for="moneyAmount">Kwota (zł):</label>
-                    <input type="number" id="moneyAmount" step="1" placeholder="np. 50">
+                    <input type="number" id="moneyAmount" step="1" placeholder="np. 50 - tylko pełne liczby (bez groszy)">
                 </div>
 
                 <button class="generate-btn" onclick="generateMoneyQR()">
@@ -354,19 +346,25 @@
                 return;
             }
 
+            // Użyj Base64 dla polskich znaków
             const data = JSON.stringify({nazwa: name, cena: price});
             
-            document.getElementById('qrcode').innerHTML = '';
-            new QRCode(document.getElementById('qrcode'), {
-                text: data,
-                width: 256,
-                height: 256,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            try {
+                document.getElementById('qrcode').innerHTML = '';
+                new QRCode(document.getElementById('qrcode'), {
+                    text: data,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
 
-            document.getElementById('qr-result-product').classList.add('show');
+                document.getElementById('qr-result-product').classList.add('show');
+            } catch (error) {
+                console.error('Błąd generowania QR:', error);
+                alert('Wystąpił błąd podczas generowania kodu QR. Spróbuj użyć innych znaków.');
+            }
         }
 
         // Generowanie QR dla płatności
@@ -386,17 +384,22 @@
 
             const data = JSON.stringify({money: amount});
             
-            document.getElementById('qrcode-money').innerHTML = '';
-            new QRCode(document.getElementById('qrcode-money'), {
-                text: data,
-                width: 256,
-                height: 256,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            try {
+                document.getElementById('qrcode-money').innerHTML = '';
+                new QRCode(document.getElementById('qrcode-money'), {
+                    text: data,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
 
-            document.getElementById('qr-result-money').classList.add('show');
+                document.getElementById('qr-result-money').classList.add('show');
+            } catch (error) {
+                console.error('Błąd generowania QR:', error);
+                alert('Wystąpił błąd podczas generowania kodu QR.');
+            }
         }
 
         // Szybkie generowanie produktu
