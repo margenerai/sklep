@@ -262,6 +262,18 @@
                     <button class="quick-btn" onclick="quickProduct('Ser żółty', 13)">Ser 13zł</button>
                     <button class="quick-btn" onclick="quickProduct('Jogurt', 3)">Jogurt 3zł</button>
                 </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <a href="index.html" style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: 500; margin: 10px;">
+                        ← Wróć do skanera
+                    </a>
+                </div>
+
+                <div style="margin-top: 15px; text-align: center;">
+                    <button onclick="downloadTemplate('produkty')" style="background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                        📄 Pobierz szablon z produktami
+                    </button>
+                </div>
             </div>
 
             <!-- Tab: Płatności -->
@@ -294,6 +306,18 @@
                     <button class="quick-btn" onclick="quickMoney(100)">100 zł</button>
                     <button class="quick-btn" onclick="quickMoney(200)">200 zł</button>
                     <button class="quick-btn" onclick="quickMoney(500)">500 zł</button>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <a href="index.html" style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: 500; margin: 10px;">
+                        ← Wróć do skanera
+                    </a>
+                </div>
+
+                <div style="margin-top: 15px; text-align: center;">
+                    <button onclick="downloadTemplate('banknoty')" style="background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                        📄 Pobierz szablon z banknotami
+                    </button>
                 </div>
             </div>
         </div>
@@ -386,6 +410,13 @@
         function quickMoney(amount) {
             document.getElementById('moneyAmount').value = amount;
             generateMoneyQR();
+        }
+
+        // Pobieranie szablonów PDF
+        function downloadTemplate(type) {
+            alert(`Funkcja pobierania szablonów ${type} będzie dostępna wkrótce!\n\nSzablony PDF z przykładowymi kodami QR będą do pobrania w następnej wersji.`);
+            // TODO: Implementacja generowania PDF z szablonem
+            // const filename = type === 'produkty' ? 'szablon_produkty.pdf' : 'szablon_banknoty.pdf';
         }
 
         // Pobieranie QR
