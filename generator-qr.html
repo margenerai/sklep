@@ -18,7 +18,6 @@
     =====================================================
     -->
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -226,6 +225,7 @@
             color: #F57C00;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -344,8 +344,22 @@
             }
         }
 
+        // Konwersja polskich znaków (działa!)
+        function normalizePolish(text) {
+            const map = {
+                'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z',
+                'Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'
+            };
+            return text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, c => map[c] || c);
+        }
+
         // Generowanie QR dla produktów
         function generateProductQR() {
+            if (typeof QRCode === 'undefined') {
+                alert('Błąd: Biblioteka nie załadowała się. Odśwież stronę.');
+                return;
+            }
+
             const name = document.getElementById('productName').value;
             const price = parseFloat(document.getElementById('productPrice').value);
 
@@ -354,36 +368,39 @@
                 return;
             }
             
-            // Sprawdź czy cena to pełna liczba
             if (!Number.isInteger(price)) {
                 alert("Cena musi być pełną liczbą (bez groszy). Przykład: 10, nie 10.50");
                 return;
             }
 
-            // Konwertuj polskie znaki na format bezpieczny dla QR
-            const safeData = convertPolishChars(JSON.stringify({nazwa: name, cena: price}));
+            // Normalizuj polskie znaki
+            const safeName = normalizePolish(name);
+            const data = JSON.stringify({nazwa: safeName, cena: price});
             
             try {
                 document.getElementById('qrcode').innerHTML = '';
-                
                 new QRCode(document.getElementById('qrcode'), {
-                    text: safeData,
+                    text: data,
                     width: 256,
                     height: 256,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.L
                 });
-                
                 document.getElementById('qr-result-product').classList.add('show');
             } catch (error) {
-                console.error('Błąd generowania QR:', error);
-                alert('Wystąpił błąd podczas generowania kodu QR. Spróbuj skrócić nazwę produktu.');
+                console.error('Błąd:', error);
+                alert('Wystąpił błąd. Spróbuj skrócić nazwę produktu.');
             }
         }
 
         // Generowanie QR dla płatności
         function generateMoneyQR() {
+            if (typeof QRCode === 'undefined') {
+                alert('Błąd: Biblioteka nie załadowała się. Odśwież stronę.');
+                return;
+            }
+
             const amount = parseFloat(document.getElementById('moneyAmount').value);
 
             if (!amount) {
@@ -391,7 +408,6 @@
                 return;
             }
             
-            // Sprawdź czy kwota to pełna liczba
             if (!Number.isInteger(amount)) {
                 alert("Kwota musi być pełną liczbą (bez groszy). Przykład: 50, nie 50.50");
                 return;
@@ -401,7 +417,6 @@
             
             try {
                 document.getElementById('qrcode-money').innerHTML = '';
-                
                 new QRCode(document.getElementById('qrcode-money'), {
                     text: data,
                     width: 256,
@@ -410,24 +425,11 @@
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.L
                 });
-                
                 document.getElementById('qr-result-money').classList.add('show');
             } catch (error) {
-                console.error('Błąd generowania QR:', error);
+                console.error('Błąd:', error);
                 alert('Wystąpił błąd podczas generowania kodu QR.');
             }
-        }
-
-        // Konwersja polskich znaków na bezpieczne dla QR
-        function convertPolishChars(text) {
-            const polishMap = {
-                'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n',
-                'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
-                'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N',
-                'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
-            };
-            
-            return text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, char => polishMap[char] || char);
         }
 
         // Szybkie generowanie produktu
