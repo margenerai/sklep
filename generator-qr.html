@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generator Kodów QR - Sklep</title>
+    
+    <!--
+    =====================================================
+    Generator Kodów QR - System Kasowy
+    
+    Autor: [TWOJE IMIĘ I NAZWISKO]
+    Data utworzenia: 2026-02-08
+    Wersja: 1.0
+    
+    Opis: Generator kodów QR dla produktów i płatności
+          z integracją ze skanerem zakupów
+    =====================================================
+    -->
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
@@ -330,7 +344,6 @@
             }
         }
 
-        
         // Generowanie QR dla produktów
         function generateProductQR() {
             const name = document.getElementById('productName').value;
@@ -347,33 +360,28 @@
                 return;
             }
 
-            const data = JSON.stringify({nazwa: name, cena: price});
+            // Konwertuj polskie znaki na format bezpieczny dla QR
+            const safeData = convertPolishChars(JSON.stringify({nazwa: name, cena: price}));
             
             try {
-                // Czyścimy stary kod
                 document.getElementById('qrcode').innerHTML = '';
                 
-                // Generujemy nowy kod z obsługą polskich znaków i długich nazw
                 new QRCode(document.getElementById('qrcode'), {
-                    // To naprawia polskie znaki:
-                    text: unescape(encodeURIComponent(data)), 
+                    text: safeData,
                     width: 256,
                     height: 256,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
-                    // Poziom L (Low) pozwala zmieścić najwięcej znaków
                     correctLevel: QRCode.CorrectLevel.L
                 });
                 
-                // Pokazujemy wynik
                 document.getElementById('qr-result-product').classList.add('show');
-
             } catch (error) {
                 console.error('Błąd generowania QR:', error);
-                alert('Wystąpił błąd. Jeśli nazwa jest bardzo długa, spróbuj ją skrócić.');
+                alert('Wystąpił błąd podczas generowania kodu QR. Spróbuj skrócić nazwę produktu.');
             }
         }
-        
+
         // Generowanie QR dla płatności
         function generateMoneyQR() {
             const amount = parseFloat(document.getElementById('moneyAmount').value);
@@ -393,6 +401,7 @@
             
             try {
                 document.getElementById('qrcode-money').innerHTML = '';
+                
                 new QRCode(document.getElementById('qrcode-money'), {
                     text: data,
                     width: 256,
@@ -401,11 +410,24 @@
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.L
                 });
+                
                 document.getElementById('qr-result-money').classList.add('show');
             } catch (error) {
                 console.error('Błąd generowania QR:', error);
                 alert('Wystąpił błąd podczas generowania kodu QR.');
             }
+        }
+
+        // Konwersja polskich znaków na bezpieczne dla QR
+        function convertPolishChars(text) {
+            const polishMap = {
+                'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n',
+                'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
+                'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N',
+                'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+            };
+            
+            return text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, char => polishMap[char] || char);
         }
 
         // Szybkie generowanie produktu
